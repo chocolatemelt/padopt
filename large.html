@@ -381,6 +381,11 @@
             <input type="text" id="num-paths" class="span2" value="" data-slider-min="10" data-slider-max="400" data-slider-step="10" data-slider-value="100" data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="hide">
             <em style="display: block; margin-top: 4px;"><span style="color: rgb(93,167,102)" class="glyphicon glyphicon-arrow-up"></span>  larger: longer computation, better solutions</em>
         </p>
+        <label>Path Type:</type><br />
+        <input type="radio" name="overlap" id="traditional" value="traditional" checked>
+        <label for="traditional">Traditional</label>&nbsp;
+        <input type="radio" name="overlap" id="nooverlap" value="rounded">
+        <label for="nooverlap">No Overlap</label></p>
 
         <!-- CONTROLS -->
         </div>
@@ -392,7 +397,11 @@
         <div id="extra-controls6x7">
             <input class="btn btn-default" type="button" value="Drop matches" id="drop"/> &nbsp;
             <input class="btn btn-default" type="button" value="Final state" id="final"/> &nbsp;
+            <input class="btn btn-default" type="button" value="Import" id="import"/> &nbsp;
+            <br>
+            <input class="btn btn-default" type="button" value="Randomize" id="randomize"/> &nbsp;
             <select class="btn btn-default"  id="randomization-type">
+                <option value="0,1,2,3,4,5">Random Type</option>
                 <option value="0,4">Ronia</option>
                 <option value="1,4">Bonia</option>
                 <option value="2,4">Gonia</option>
@@ -402,19 +411,18 @@
                 <option value="0,1,2">3-color</option>
                 <option value="0,1,2,5">3 + Heal</option>
                 <option value="0,1,2,3,4">5-color</option>
-                <option value="0,1,2,3,4,5" selected="selected">5 + Heal</option>
+                <option value="0,1,2,3,4,5">5 + Heal</option>
                 <option value="0,1,2,3,4,5,6">All</option>
-            </select>
-            <br>
-            <input class="btn btn-default" type="button" value="Randomize" id="randomize"/> &nbsp;
+            </select> &nbsp;
             <input class="btn btn-default" type="button" value="Clear" id="clear"/> &nbsp;
-            <input class="btn btn-default" type="button" value="Import" id="import"/> &nbsp;
             <br>
             <input class="btn btn-default" type="button" value="Change orbs" id="change"/> &nbsp;
             <select class="btn btn-default" onchange="location = this.options[this.selectedIndex].value;">
-            <option value="large.html">6x7</option>
             <option value="index.html">5x6</option>
-            </select>
+            <option value="large.html" selected>6x7</option>
+            <option value="small.html">5x4</option>
+            </select> &nbsp;
+            <input class="btn btn-default" type="button" value="Lengthen Path" id="pathincrease"/>
             <br>
         </div>
         <div id="hand"></div>
@@ -429,7 +437,7 @@
             <span class="e6"></span> = 6 / j<br />
             <span class="eX"></span> = . / x<br />
         </div>
-        <textarea id="import-textarea" class="import-textarea6x7" maxlength="42" spellcheck="false"></textarea>
+        <textarea id="import-textarea" class="import-textarea6x7" maxlength="30" spellcheck="false"></textarea>
         <div id="import-control" class="import-control6x7">
             <input type="button" value="Cancel" id="import-cancel"/>
             <input type="button" value="Import" id="import-import"/>
@@ -449,6 +457,7 @@
             <input type="button" value="Change" class="btn btn-success" id="change-change"/>
         </div>
         </div>
+
 
         <!-- SOLVER AREA -->
         <div class="container-fluid" style="">

@@ -145,7 +145,9 @@ function find_matches(board) {
 
     // 2. enumerate the matches by flood-fill.
     var matches = [];
-    if (ROWS == "5") {
+    if (COLS == "4") {
+	var thisMatch = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+    } else if (ROWS == "5") {
 	var thisMatch = [[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
     } else if (ROWS == "6") {
 	var thisMatch = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
@@ -156,7 +158,9 @@ function find_matches(board) {
             if (typeof(cur_orb) == 'undefined') { continue; }
             var stack = [make_rc(i, j)];
             var count = 0;
-            if (ROWS == "5") {
+            if (COLS == "4") {
+                var thisMatch = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+            } else if (ROWS == "5") {
                 var thisMatch = [[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
             } else if (ROWS == "6") {
                 var thisMatch = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];      
@@ -229,12 +233,10 @@ function compute_weight(matches, weights) {
 
         var multi_orb_bonus = (m.count - 3) * MULTI_ORB_BONUS + 1;
 
-
 		total_weight += multi_orb_bonus * base_weight * (1 + numRows[m.type]*weights[m.type]['row']/10);
 		//total_weight += multi_orb_bonus * base_weight;
     });
     var combo_bonus = (matches.length - 1) * COMBO_BONUS + 1;
-
     return total_weight * combo_bonus;
 }
 
@@ -490,7 +492,7 @@ function make_solution(board) {
             path: [],
             is_done: false,
             weight: 0,
-			heur: compute_heur(board),
+            heur: compute_heur(board),
             matches: []};
 }
 
@@ -603,8 +605,10 @@ function add_solution_as_li(html_array, solution) {
     html_array.push(solution.weight.toFixed(2));
     html_array.push(', L=');
     html_array.push(solution.path.length);
-	html_array.push(', H=');
+    html_array.push(', H=');
     html_array.push(solution.heur.toFixed(2));
+    html_array.push(', &#8623;=');
+    html_array.push(getSimplePathXYs(solution).length-1);
     var sorted_matches = solution.matches.slice();
     sorted_matches.sort(function(a, b) {
         if (a.count != b.count) {
@@ -680,6 +684,18 @@ function draw_line_to(canvas, px, py, x, y) {
     canvas.lineTo(x, y);
 }
 
+function sign(x) {
+    return x > 0 ? 1 : x < 0 ? -1 : 0;
+}
+
+function draw_line_to2(canvas, px, py, x, y) {
+    var dr = 0.1;
+    var dx = ORB_WIDTH  * dr * sign(x - px);
+    var dy = ORB_HEIGHT * dr * sign(y - py);
+    canvas.lineTo(px + dx, py + dy);
+    canvas.lineTo( x - dx,  y - dy);
+}
+
 function draw_path(init_rc, path) {
     var canvas = clear_canvas();
     var rc = copy_rc(init_rc);
@@ -690,6 +706,9 @@ function draw_path(init_rc, path) {
     });
 
     xys = simplify_path(xys);
+    if ( drawstyle == "rounded" ) {
+        avoid_overlap(xys);
+    }
 
     canvas.lineWidth = 4;
     canvas.strokeStyle = 'rgba(0, 0, 0, 0.75)';
@@ -700,7 +719,11 @@ function draw_path(init_rc, path) {
             canvas.moveTo(xy.x, xy.y);
         } else {
             var prev_xy = xys[i-1];
-            draw_line_to(canvas, prev_xy.x, prev_xy.y, xy.x, xy.y);
+	    if ( drawstyle == "rounded" ) {
+                draw_line_to2(canvas, prev_xy.x, prev_xy.y, xy.x, xy.y);
+	    } else {
+                draw_line_to(canvas, prev_xy.x, prev_xy.y, xy.x, xy.y);
+	    }
         }
     }
     canvas.stroke();
@@ -735,7 +758,9 @@ function clear_canvas() {
 
 var global_board = create_empty_board();
 var global_solutions = [];
+var global_unsimplified = [];
 var global_index = 0;
+var drawstyle;
 
 $(document).ready(function() {
 
@@ -763,7 +788,7 @@ $(document).ready(function() {
     $('#hand, #import-popup, #change-popup').hide();
 
     $('#profile-selector').change(function() {
-        var values = this.value.split(/,/);
+        var values = this.value.replace(/\s+/g, '').split(/,/);
         for (var i = 0; i < TYPES; ++ i) {
             $('#e' + i + '-normal').val(values[4*i]);
             $('#e' + i + '-mass').val(values[4*i+1]);
@@ -771,6 +796,14 @@ $(document).ready(function() {
 			$('#e' + i + '-tpa').val(values[4*i+3]);
         }
 		globalheur = values[4*TYPES];
+    });
+
+    $('#traditional').click(function() {
+	drawstyle = "traditional";
+    });
+
+    $('#nooverlap').click(function() {
+	drawstyle = "rounded";
     });
 
     $('#solve').click(function() {
@@ -793,6 +826,7 @@ $(document).ready(function() {
         }, function(solutions) {
             $('.loading-throbber').fadeToggle();
             var html_array = [];
+	    global_unsimplified = solutions;
             solutions = simplify_solutions(solutions);
             global_solutions = solutions;
             solutions.forEach(function(solution) {
@@ -800,6 +834,34 @@ $(document).ready(function() {
             });
             $('#solutions > ol').html(html_array.join(''));
             solver_button.disabled = false;
+            $('#status').addClass('active');
+        });
+    });
+
+    $('#pathincrease').click(function() {
+        $('[id^="grid"] > div').each(function(){ $(this).removeClass('border-flash'); });
+        board = global_board
+        $('.loading-throbber').fadeToggle('fast');
+        lengthenSolution(board, global_unsimplified, function(p, max_p) {
+            //console.log(p);
+            //console.log(max_p);
+            var result = parseInt(p * 100 / parseInt(max_p));
+            $('#are-you-ready').remove();
+            if ($('#status').hasClass('active')) {
+            $('#solutions ol li').fadeToggle();
+            $('#status').removeClass('active');
+            }
+            $('#status').text('Solving ( ' + result + '% )');
+        }, function(solutions) {
+            $('.loading-throbber').fadeToggle();
+            var html_array = [];
+	    global_unsimplified = solutions;
+            solutions = simplify_solutions(solutions);
+            global_solutions = solutions;
+            solutions.forEach(function(solution) {
+                add_solution_as_li(html_array, solution, board);
+            });
+            $('#solutions > ol').html(html_array.join(''));
             $('#status').addClass('active');
         });
     });
@@ -812,8 +874,12 @@ $(document).ready(function() {
         var hand_elem = $('#hand');
         hand_elem.stop(/*clearQueue*/true).show();
         path.forEach(function(xy, i) {
-            var left = xy.x + 13;
-            var top = xy.y + 13;
+	if (COLS == "4") {
+            var left = xy.x + 76;
+        } else {
+            var left = xy.x + 14;
+	}
+            var top = xy.y + 14;
             hand_elem[i == 0 ? 'offset' : 'animate']({left: left, top: top});
         });
         $('#solutions li.prev-selection').removeClass('prev-selection');
@@ -913,3 +979,85 @@ $(document).ready(function() {
         $('#change-popup').hide();
     });
 });
+
+function getSimplePathXYs(solution) {
+  if (solution.simplyXYs) {
+    return solution.simplyXYs; //solved already
+  }
+  var init_rc = solution.init_cursor;
+  var path = solution.path;
+  var rc = new Coordinate(init_rc.row, init_rc.col);
+  var xys = [rc.getXY()];
+  path.forEach(function (p) {
+    in_place_move_rc(rc, p);
+    xys.push(rc.getXY());
+  });
+
+  return simplify_path(xys);
+}
+
+function lengthenSolution (board, solutions, step_callback, finish_callback) {
+    var weights = get_weights();
+
+    var seed_solution = make_solution(board);
+    in_place_evaluate_solution(seed_solution, weights);
+
+    for (var i = 0, s = 0; i < ROWS; ++ i) {
+        for (var j = 0; j < COLS; ++ j, ++ s) {
+            solutions.push(copy_solution_with_cursor(seed_solution, i, j));
+        }
+    }
+
+    var oldmax = parseInt(get_max_path_length());
+    var newmax = oldmax + 1;
+
+    var solve_state = {
+        step_callback: step_callback,
+        finish_callback: finish_callback,
+        max_length: newmax,
+        dir_step: is_8_dir_movement_supported() ? 1 : 2,
+        p: oldmax,
+        solutions: solutions,
+        weights: weights,
+    };
+    $('#max-length').val(solve_state.max_length);
+    solve_board_step(solve_state);
+}
+
+function Coordinate(row, col){
+  this.row = row || 0;
+  this.col = col || 0;
+}
+
+Coordinate.prototype.getXY = function(){
+  var x = this.col * ORB_X_SEP + ORB_WIDTH/2;
+  var y = this.row * ORB_Y_SEP + ORB_HEIGHT/2;
+  return {x: x, y: y};
+};
+
+
+function avoid_overlap(xys) {
+    var rail_num = 5; // should be odd integer
+    var rail_half = Math.floor(rail_num / 2);
+    var dr = Math.max(0.08, 0.4 / rail_num);
+    var rail_x = {};
+    var rail_y = {};
+    for (var i = 1; i < xys.length; ++ i) {
+        if (xys[i].y == xys[i-1].y) {
+            y = xys[i].y;
+            rail_y[y] = rail_y[y] || 0;
+            var dy = ORB_HEIGHT * (rail_y[y] - rail_half) * dr;
+            rail_y[y] = (rail_y[y] + rail_half) % rail_num;
+            xys[i].y += dy;
+            xys[i-1].y += dy;
+        } else if (xys[i].x == xys[i-1].x) {
+            x = xys[i].x;
+            rail_x[x] = rail_x[x] || 0;
+            var dx = ORB_WIDTH * (rail_x[x] - rail_half) * dr;
+            rail_x[x] = (rail_x[x] + rail_half) % rail_num;
+            xys[i].x += dx;
+            xys[i-1].x += dx;
+        }
+    }
+    return xys;
+}
