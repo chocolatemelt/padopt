@@ -59,3 +59,4 @@ TODO
 * Introduce better solver (e.g. [this post](http://puzzleanddragonsforum.com/showthread.php?tid=1603&pid=6263#pid6263)). Currently just a brute-force greedy algorithm, which may not produce truly optimal results.
 * Randomizer is actually pretty awful and extremely slow the less orbs there are (due to trying to find a board setup without any matches). For some reason this crashes the page if I remove the find_matches function as well. Fix sometime soon hopefully since Sonia boards are really useful to learn.
 * Possibly support nontraditional leaders such as cross and min-4-match
+* Add jammers and bomb orbs
