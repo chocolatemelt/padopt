@@ -204,6 +204,12 @@ td.e5 { background-size: 20px; }
   border: 3px solid black;
   background: #eee;
   padding: 20px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .import-popup6x5, .import-popup5x4 {
   width: 350px;
