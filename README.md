@@ -20,6 +20,7 @@ Changelist
 * Changed scrollbars to [perfect-scrollbar](https://github.com/noraesae/perfect-scrollbar).
 * Added 7x6 board (by [adambot](https://github.com/adambot))
 * Various different profiles
+* Default pathing changed to no overlay/rounded for better visibility (by [adambot](https://github.com/adambot) and [ace-wu](https://github.com/ace-wu))
 
 Usage
 -----
