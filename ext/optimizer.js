@@ -765,7 +765,7 @@ var global_board = create_empty_board();
 var global_solutions = [];
 var global_unsimplified = [];
 var global_index = 0;
-var drawstyle;
+var drawstyle = "rounded";
 
 $(document).ready(function() {
 
